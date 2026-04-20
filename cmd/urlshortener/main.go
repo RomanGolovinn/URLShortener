@@ -47,7 +47,7 @@ func main() {
 	h := handler.NewHandler(svc, baseURL)
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /api/shorten", h.ShortenURL)
+	mux.HandleFunc("POST /shorten", h.ShortenURL)
 	mux.HandleFunc("GET /{code}", h.Redirect)
 
 	serverAddr := os.Getenv("SERVER_ADDRESS")
