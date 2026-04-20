@@ -19,7 +19,7 @@ type Repo interface {
 	Get(ctx context.Context, shortCode string) (string, error)
 	Save(ctx context.Context, url, shortCode string, createdAt time.Time) error
 	Delete(ctx context.Context, shortCode string) error
-	UpdateTransition(ctx context.Context, shortCode string) error
+	UpdateTransition(ctx context.Context, shortCode string, lastTransition time.Time) error
 }
 
 type PostgresRepo struct {
@@ -60,10 +60,10 @@ func (p *PostgresRepo) Save(ctx context.Context, url, shortCode string,
 }
 
 func (p *PostgresRepo) UpdateTransition(ctx context.Context, shortCode string,
-	createdAt time.Time) error {
+	lastTransition time.Time) error {
 	q := `update links set number_of_transitions = number_of_transitions + 1,
 	last_transition = $1 where short_code = $2`
-	_, err := p.db.Exec(ctx, q, createdAt, shortCode)
+	_, err := p.db.Exec(ctx, q, lastTransition, shortCode)
 	return err
 }
 

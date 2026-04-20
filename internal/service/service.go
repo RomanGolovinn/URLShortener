@@ -69,7 +69,7 @@ func (s *Service) getLink(ctx context.Context, shortCode string) (string, error)
 }
 
 func (s *Service) recordTransition(ctx context.Context, shortCode string) error {
-	err := s.repo.UpdateTransition(ctx, shortCode)
+	err := s.repo.UpdateTransition(ctx, shortCode, time.Now())
 	if err != nil {
 		return fmt.Errorf("ошибка обновления статистики переходов: %w", err)
 	}
