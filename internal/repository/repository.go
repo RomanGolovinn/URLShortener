@@ -17,7 +17,7 @@ var (
 
 type Repo interface {
 	Get(ctx context.Context, shortCode string) (string, error)
-	Save(ctx context.Context, url, shortCode string) error
+	Save(ctx context.Context, url, shortCode string, createdAt time.Time) error
 	Delete(ctx context.Context, shortCode string) error
 	UpdateTransition(ctx context.Context, shortCode string) error
 }
