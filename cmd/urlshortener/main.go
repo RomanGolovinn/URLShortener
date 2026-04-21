@@ -50,10 +50,12 @@ func main() {
 	mux.HandleFunc("POST /shorten", h.ShortenURL)
 	mux.HandleFunc("GET /{code}", h.Redirect)
 
-	serverAddr := os.Getenv("APP_PORT")
-	if serverAddr == "" {
-		serverAddr = ":8080"
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8080"
 	}
+
+	serverAddr := ":" + port
 
 	log.Printf("Сервер запущен на %s", serverAddr)
 	if err := http.ListenAndServe(serverAddr, mux); err != nil {
