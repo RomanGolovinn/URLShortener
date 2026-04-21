@@ -50,7 +50,7 @@ func main() {
 	mux.HandleFunc("POST /shorten", h.ShortenURL)
 	mux.HandleFunc("GET /{code}", h.Redirect)
 
-	serverAddr := os.Getenv("SERVER_ADDRESS")
+	serverAddr := os.Getenv("APP_PORT")
 	if serverAddr == "" {
 		serverAddr = ":8080"
 	}
