@@ -31,12 +31,13 @@ func main() {
 	defer pool.Close()
 
 	repo := repository.NewPostgresRepo(pool)
+
 	lenStr := os.Getenv("URL_LEN")
-	len, err := strconv.Atoi(lenStr)
+	length, err := strconv.Atoi(lenStr)
 	if err != nil {
 		log.Fatal("Неверный формат длинны короткой ссылки")
 	}
-	gen := service.NewRandomGenerator(len)
+	gen := service.NewRandomGenerator(length)
 	svc := service.NewService(gen, repo)
 
 	baseURL := os.Getenv("BASE_URL")
@@ -50,10 +51,12 @@ func main() {
 	mux.HandleFunc("POST /shorten", h.ShortenURL)
 	mux.HandleFunc("GET /{code}", h.Redirect)
 
-	serverAddr := os.Getenv("APP_PORT")
-	if serverAddr == "" {
-		serverAddr = ":8080"
+	port := os.Getenv("APP_PORT")
+	if port == "" {
+		port = "8080"
 	}
+
+	serverAddr := ":" + port
 
 	log.Printf("Сервер запущен на %s", serverAddr)
 	if err := http.ListenAndServe(serverAddr, mux); err != nil {
