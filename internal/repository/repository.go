@@ -72,3 +72,16 @@ func (p *PostgresRepo) Delete(ctx context.Context, shortCode string) error {
 	_, err := p.db.Exec(ctx, q, shortCode)
 	return err
 }
+
+func (p *PostgresRepo) DeleteExpired(ctx context.Context, cutoff time.Time) (int64, error) {
+	query := `
+		DELETE FROM links 
+		WHERE COALESCE(last_transition, created_at) < $1
+	`
+	tag, err := p.db.Exec(ctx, query, cutoff)
+	if err != nil {
+		return 0, err
+	}
+
+	return tag.RowsAffected(), nil
+}

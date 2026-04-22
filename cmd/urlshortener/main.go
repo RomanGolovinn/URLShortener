@@ -14,6 +14,7 @@ import (
 	"github.com/RomanGolovinn/urlshortener/internal/handler"
 	"github.com/RomanGolovinn/urlshortener/internal/repository"
 	"github.com/RomanGolovinn/urlshortener/internal/service"
+	"github.com/RomanGolovinn/urlshortener/internal/worker"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 )
@@ -71,9 +72,14 @@ func main() {
 		}
 	}()
 
+	workerCtx, workerCancel := context.WithCancel(context.Background())
+	go worker.StartCleaner(workerCtx, repo, 24*time.Hour, 30*24*time.Hour)
+
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+
+	workerCancel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
