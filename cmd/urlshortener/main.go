@@ -2,10 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
+	"time"
 
 	"github.com/RomanGolovinn/urlshortener/internal/handler"
 	"github.com/RomanGolovinn/urlshortener/internal/repository"
@@ -28,7 +32,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("Ошибка подключения к БД: %v", err)
 	}
-	defer pool.Close()
 
 	repo := repository.NewPostgresRepo(pool)
 
@@ -56,10 +59,28 @@ func main() {
 		port = "8080"
 	}
 
-	serverAddr := ":" + port
-
-	log.Printf("Сервер запущен на %s", serverAddr)
-	if err := http.ListenAndServe(serverAddr, mux); err != nil {
-		log.Fatalf("Ошибка сервера: %v", err)
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: mux,
 	}
+
+	go func() {
+		log.Printf("Сервер запущен на порту %s", port)
+		if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("Ошибка сервера: %v", err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Printf("Ошибка при остановке сервера: %v", err)
+	}
+
+	pool.Close()
 }
