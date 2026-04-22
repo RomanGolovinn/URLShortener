@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 
 	"github.com/RomanGolovinn/urlshortener/internal/repository"
@@ -24,14 +25,22 @@ func NewService(gen Generator, repo repository.Repo) *Service {
 	}
 }
 
-func (s *Service) ShortenURL(ctx context.Context, url string) (string, error) {
+func (s *Service) ShortenURL(ctx context.Context, rawURL string) (string, error) {
+	parsedURL, err := url.ParseRequestURI(rawURL)
+	if err != nil {
+		return "", errors.New("некорректный формат URL")
+	}
+
+	if parsedURL.Scheme != "http" && parsedURL.Scheme != "https" {
+		return "", errors.New("разрешены только протоколы http и https")
+	}
 	createdAt := time.Now()
 	for i := 0; i < maxRetries; i++ {
 		shortCode, err := s.gen.Generate()
 		if err != nil {
 			return "", fmt.Errorf("ошибка генерации кода: %w", err)
 		}
-		err = s.repo.Save(ctx, url, shortCode, createdAt)
+		err = s.repo.Save(ctx, rawURL, shortCode, createdAt)
 		if err != nil {
 			if errors.Is(err, repository.ErrCollision) {
 				continue
